@@ -12,18 +12,6 @@ export default class Todo extends Component {
     todos: PropTypes.array
   };
 
-  state = {
-    open: false
-  }
-
-  handleOpen = () => {
-    this.setState({ open: true });
-  }
-
-  handleClose = () => {
-    this.setState({ open: false });
-  }
-
   handleCheck(itemId) {
     const { toggleTodo } = this.props;
     toggleTodo(itemId);
@@ -53,19 +41,19 @@ export default class Todo extends Component {
           onKeyDown={this.handleKeyDown}
         />
         <List>
-        {todos.map((item) => (
+        {todos.map((todo) => (
           <ListItem
-            key={item.id}
-            primaryText={item.text}
-            onTouchTap={() => this.handleCheck(item.id)}
+            key={todo.id}
+            primaryText={todo.text}
+            onTouchTap={() => this.handleCheck(todo.id)}
             leftIcon={
               <Checkbox
-                checked={item.completed}
+                checked={todo.completed}
               />
             }
             rightIcon={
               <DeleteForever
-                onClick={() => this.handleDelete(item.id)}
+                onClick={() => this.handleDelete(todo.id)}
               />
             }
           />
