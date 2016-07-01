@@ -1,24 +1,40 @@
 {
   "name": "todo-electron",
   "productName": "TodoElectron",
-  "version": "0.10.0",
+  "version": "0.0.1",
   "description": "Electron application boilerplate based on React, React Router, Webpack, React Hot Loader for rapid application development",
   "main": "main.js",
   "scripts": {
-    "test": "cross-env NODE_ENV=test mocha --compilers js:babel-register --recursive --require ./test/setup.js test/**/*.spec.js",
+    "test": "cross-env NODE_ENV=test mocha --compilers js:babel-register --recursive --require ./test/setup.js",
     "test-watch": "npm test -- --watch",
     "test-e2e": "cross-env NODE_ENV=test mocha --compilers js:babel-register --require ./test/setup.js --require co-mocha ./test/e2e.js",
     "lint": "eslint app test *.js",
     "hot-server": "node -r babel-register server.js",
     "build-main": "cross-env NODE_ENV=production node -r babel-register ./node_modules/webpack/bin/webpack --config webpack.config.electron.js --progress --profile --colors",
     "build-renderer": "cross-env NODE_ENV=production node -r babel-register ./node_modules/webpack/bin/webpack --config webpack.config.production.js --progress --profile --colors",
-    "build": "npm run build-main && npm run build-renderer",
+    "build-all": "npm run build-main && npm run build-renderer",
     "start": "cross-env NODE_ENV=production electron ./",
     "start-hot": "cross-env HOT=1 NODE_ENV=development electron -r babel-register -r babel-polyfill ./main.development",
     "package": "cross-env NODE_ENV=production node -r babel-register package.js",
     "package-all": "npm run package -- --all",
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
-    "dev": "concurrently --kill-others \"npm run hot-server\" \"npm run start-hot\""
+    "dev": "concurrently --kill-others \"npm run hot-server\" \"npm run start-hot\"",
+
+    "clean": "rm -rf ./release",
+    "clean:osx": "rm -rf ./release/osx",
+    "clean:win": "rm -rf ./release/win",
+
+    "pack": "npm run pack:osx && npm run pack:win",
+    "pack:osx": "npm run clean:osx && electron-packager . \"Todo\"  --out=dist/osx --platform=darwin --arch=x64 --ignore=\"releases\" ",
+    "pack:win": "npm run clean:win && electron-packager . \"Todo\" --out=dist/win --platform=win32 --arch=ia32 --icon=assets/win/icon.ico --ignore=\"releases\" ",
+
+    "build": "npm run build:osx && npm run build:win",
+    "build:osx": "npm run pack:osx && electron-builder \"releases/osx/Todo-darwin-x64/Todo.app\" --platform=osx --out=\"releases/osx\" --config=builder.json",
+    "build:win": "npm run pack:win && electron-builder \"releases/win/Todo-win32-ia32\" --platform=win --out=\"releases/win\" --config=builder.json",
+
+    "archive": "npm run archive:osx && npm run archive:win",
+    "archive:osx": "npm run build:osx && zip -j \"releases/osx/Todo-osx.zip\" \"releases/osx/Todo.dmg\"",
+    "archive:win": "npm run build:win && zip -j \"releases/win/Todo-win32\" \"releases/win/Todo Setup.exec\""
   },
   "bin": {
     "electron": "./node_modules/.bin/electron"
@@ -72,7 +88,7 @@
     "del": "^2.2.0",
     "devtron": "^1.2.0",
     "electron-devtools-installer": "^1.1.2",
-    "electron-packager": "^7.0.2",
+    "electron-packager": "^7.1.0",
     "electron-prebuilt": "^1.2.3",
     "electron-rebuild": "^1.1.4",
     "eslint": "^2.10.2",

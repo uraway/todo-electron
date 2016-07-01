@@ -1,33 +1,39 @@
 sudo: false
-language: node_js
-node_js:
-  - "4"
-  - "5"
-  - "6"
-
+language: objective-c
 cache:
   directories:
-    - node_modules
-
-addons:
-  apt:
-    sources:
-    - ubuntu-toolchain-r-test
-    packages:
-    - g++-4.8
-
+  - node_modules
+env:
+  - NODE_VERSION="6.2.0"
+before_install:
+  - git clone https://github.com/creationix/nvm.git /tmp/.nvm
+  - source /tmp/.nvm/nvm.sh
+  - nvm install $NODE_VERSION
+  - nvm use --delete-prefix $NODE_VERSION
+  - node --version
 install:
-- export CXX="g++-4.8"
 - npm install
-- "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16"
-
 before_script:
 - export DISPLAY=:99.0
 - sh -e /etc/init.d/xvfb start &
 - sleep 3
-
 script:
 - npm run lint
 - npm run test
-- npm run build
-- npm run test-e2e
+before_deploy:
+  - brew update
+  - brew install wine
+  - wine --version
+  - brew install makensis
+  - npm run archive
+deploy:
+  provider: releases
+  api_key:
+    secure: YTmhVW4IDK0kzcyALecNGPAr135lrXJxRGCBN+pqiECE3xfdHQzcTfBpam8KRKugsKusuvp65ZuNelMB/P1nDPjIH6Y05H45JVWU5ypqALlilJN4QRGXFV0BZ1j0k8R8N803WUwrCJaWnorSfoNRs5FQ77AlfpSBcTqllHoja3lrROLnH7c14iSIC9Tkcd105HNf82xm4OxmVCGE6QffXv/o+ytAmZLwYL7x7+SrHkddgLNtJTgIF80PH6YaskuKu3GYnKdHn6/LO8yCw33qo7YfTaoIUFQNB6R2ryEXCdbD4VNvr5O7FCLyHKqcNKeoZ6LuGyBKVo/VDKFSo3AXBMJjaF+JMTGX3RFcpiZa18VHCAH5RR76EnEnfo49xKW2yWBBDz22eVFNd3nLRnUVbZ1FInPsn/s0i2AaFDWAYftxCRhIfJe/lKrO4JInZBW5Mx3P93tQwFt9y5UMHa1lV7SvMy7GI3ZFHcRY99oD+FUPxffnQowznCwo3IjhBVq811Vob+UVu2EURCIa6E1+oOMWeIPdr/Liu1IVN//itMsF9suJGjDlx/+4n+G/0Vx3tLDj/0GzzGkqOjmKi0DnVuXo1ekzRd7CBvnF7ooOQx2XxkFuKHXkjNyPHqShf6wV8+XvFcmej3vYL4K5gxJf3PlP2U5M7/HeEWW9Th/KEcg=
+  file:
+    - releases/osx/Todo-osx.zip
+    - releases/win/Todo-win.zip
+  on:
+    repo: uraway/todo-electron
+    tags: true
+    all_branches: true
