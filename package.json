@@ -6,6 +6,7 @@
   "main": "main.js",
   "scripts": {
     "test": "cross-env NODE_ENV=test mocha --compilers js:babel-register --recursive --require ./test/setup.js",
+    "revision": "echo \"export default '`git rev-parse HEAD`';\" > app/utils/revision.js",
     "test-watch": "npm test -- --watch",
     "test-e2e": "cross-env NODE_ENV=test mocha --compilers js:babel-register --require ./test/setup.js --require co-mocha ./test/e2e.js",
     "lint": "eslint app test *.js",
