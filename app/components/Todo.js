@@ -52,6 +52,7 @@ export default class Todo extends Component {
         <TextField
           name="addTodo"
           ref="addTodo"
+          type="text"
           floatingLabelText="Add a new todo"
           onKeyDown={this.handleKeyDown}
           value={value}
