@@ -12,16 +12,17 @@ export default class Todo extends Component {
     todos: PropTypes.array
   };
 
-  state = {
-    open: false
+  constructor() {
+    super();
+    this.state = {
+      value: ''
+    };
   }
 
-  handleOpen = () => {
-    this.setState({ open: true });
-  }
-
-  handleClose = () => {
-    this.setState({ open: false });
+  handleChange(event) {
+    this.setState({
+      value: event.target.value
+    });
   }
 
   handleCheck(itemId) {
@@ -34,6 +35,7 @@ export default class Todo extends Component {
     const { addTodo } = this.props;
     if (event.keyCode === 13) {
       addTodo(value);
+      this.setState({ value: '' });
     }
   }
 
@@ -44,28 +46,32 @@ export default class Todo extends Component {
 
   render() {
     const { todos } = this.props;
+    const { value } = this.state;
     return (
       <div>
         <TextField
           name="addTodo"
           ref="addTodo"
+          type="text"
           floatingLabelText="Add a new todo"
           onKeyDown={this.handleKeyDown}
+          value={value}
+          onChange={this.handleChange.bind(this)}
         />
         <List>
-        {todos.map((item) => (
+        {todos.map((todo) => (
           <ListItem
-            key={item.id}
-            primaryText={item.text}
-            onTouchTap={() => this.handleCheck(item.id)}
+            key={todo.id}
+            primaryText={todo.text}
+            onTouchTap={() => this.handleCheck(todo.id)}
             leftIcon={
               <Checkbox
-                checked={item.completed}
+                checked={todo.completed}
               />
             }
             rightIcon={
               <DeleteForever
-                onClick={() => this.handleDelete(item.id)}
+                onClick={() => this.handleDelete(todo.id)}
               />
             }
           />
