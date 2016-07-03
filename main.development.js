@@ -1,22 +1,39 @@
-import { app, BrowserWindow, Menu, shell } from 'electron';
+import { app, BrowserWindow, Menu, shell, Tray, dialog } from 'electron';
+import path from 'path';
+import AutoLaunch from 'auto-launch';
+import GhReleases from 'electron-gh-releases';
 
 let menu;
 let template;
-let mainWindow = null;
+let tray = null;
 
+const iconIdle = path.join(__dirname, 'images', 'tray-idle.png');
 
-if (process.env.NODE_ENV === 'development') {
+// Utilities
+const isDevelopment = (process.env.NODE_ENV === 'development');
+const isDarwin = (process.platform === 'darwin');
+/*
+const isLinux = (process.platform === 'linux');
+const isWindows = (process.platform === 'win32');
+*/
+
+const autoStart = new AutoLaunch({
+  name: 'Todo',
+  path: process.execPath.match(/.*?\.app/)[0]
+});
+
+if (isDevelopment) {
   require('electron-debug')(); // eslint-disable-line global-require
 }
 
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  if (isDarwin) app.quit();
 });
 
 
 const installExtensions = async () => {
-  if (process.env.NODE_ENV === 'development') {
+  if (isDevelopment) {
     const installer = require('electron-devtools-installer'); // eslint-disable-line global-require
     const extensions = [
       'REACT_DEVELOPER_TOOLS',
@@ -24,7 +41,7 @@ const installExtensions = async () => {
     ];
     for (const name of extensions) {
       try {
-        await installer.default(installer[name]);
+        await installer.default(installer[name]); // eslint-disable-line babel/no-await-in-loop
       } catch (e) {} // eslint-disable-line
     }
   }
@@ -33,38 +50,59 @@ const installExtensions = async () => {
 app.on('ready', async () => {
   await installExtensions();
 
-  mainWindow = new BrowserWindow({
-    show: false,
-    width: 1024,
-    height: 728
-  });
+  tray = new Tray(iconIdle);
 
-  mainWindow.loadURL(`file://${__dirname}/app/app.html`);
-
-  mainWindow.webContents.on('did-finish-load', () => {
-    mainWindow.show();
-    mainWindow.focus();
-  });
-
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
-
-  if (process.env.NODE_ENV === 'development') {
-    mainWindow.openDevTools();
-    mainWindow.webContents.on('context-menu', (e, props) => {
-      const { x, y } = props;
-
-      Menu.buildFromTemplate([{
-        label: 'Inspect element',
-        click() {
-          mainWindow.inspectElement(x, y);
-        }
-      }]).popup(mainWindow);
+  function comfirmUpdate(updater) {
+    dialog.showMessageBox({
+      type: 'question',
+      buttons: ['Update & Restart', 'Cancel'],
+      title: 'Update available',
+      cancelId: 99,
+      message: 'There is an update available. Would you like to update and restart now?'
+    }, (response) => {
+      console.log(`Exit: ${response}`);
+      app.dock.hide();
+      if (response === 0) {
+        updater.install();
+      }
     });
   }
 
-  if (process.platform === 'darwin') {
+  function checkUpdate(showAlert) {
+    const updateOptions = {
+      repo: 'uraway/todo-electron',
+      currentVersion: app.getVersion()
+    };
+
+    const updater = new GhReleases(updateOptions);
+
+    updater.on('error', (event, message) => {
+      console.log(`Event: ${JSON.stringify(event)}. Message: ${message}`);
+    });
+
+    updater.on('update-downloaded', () => {
+      comfirmUpdate(updater);
+    });
+
+    updater.check((err, status) => {
+      if (err || !status) {
+        if (showAlert) {
+          dialog.showMessageBox({
+            type: 'info',
+            buttons: ['Close'],
+            title: 'No update available',
+            message: 'You are currently running the latest version.'
+          });
+        }
+        app.dock.hide();
+      }
+      if (!err && status) {
+        updater.download();
+      }
+    });
+  }
+
+  function initMenu() {
     template = [{
       label: 'Electron',
       submenu: [{
@@ -88,14 +126,6 @@ app.on('ready', async () => {
       }, {
         label: 'Show All',
         selector: 'unhideAllApplications:'
-      }, {
-        type: 'separator'
-      }, {
-        label: 'Quit',
-        accelerator: 'Command+Q',
-        click() {
-          app.quit();
-        }
       }]
     }, {
       label: 'Edit',
@@ -128,29 +158,29 @@ app.on('ready', async () => {
       }]
     }, {
       label: 'View',
-      submenu: (process.env.NODE_ENV === 'development') ? [{
+      submenu: (isDevelopment) ? [{
         label: 'Reload',
         accelerator: 'Command+R',
         click() {
-          mainWindow.webContents.reload();
+          tray.window.webContents.reload();
         }
       }, {
         label: 'Toggle Full Screen',
         accelerator: 'Ctrl+Command+F',
         click() {
-          mainWindow.setFullScreen(!mainWindow.isFullScreen());
+          tray.window.setFullScreen(!tray.window.isFullScreen());
         }
       }, {
         label: 'Toggle Developer Tools',
         accelerator: 'Alt+Command+I',
         click() {
-          mainWindow.toggleDevTools();
+          tray.window.toggleDevTools();
         }
       }] : [{
         label: 'Toggle Full Screen',
         accelerator: 'Ctrl+Command+F',
         click() {
-          mainWindow.setFullScreen(!mainWindow.isFullScreen());
+          tray.window.setFullScreen(!tray.isFullScreen());
         }
       }]
     }, {
@@ -196,71 +226,46 @@ app.on('ready', async () => {
 
     menu = Menu.buildFromTemplate(template);
     Menu.setApplicationMenu(menu);
-  } else {
-    template = [{
-      label: '&File',
-      submenu: [{
-        label: '&Open',
-        accelerator: 'Ctrl+O'
-      }, {
-        label: '&Close',
-        accelerator: 'Ctrl+W',
-        click() {
-          mainWindow.close();
-        }
-      }]
-    }, {
-      label: '&View',
-      submenu: (process.env.NODE_ENV === 'development') ? [{
-        label: '&Reload',
-        accelerator: 'Ctrl+R',
-        click() {
-          mainWindow.webContents.reload();
-        }
-      }, {
-        label: 'Toggle &Full Screen',
-        accelerator: 'F11',
-        click() {
-          mainWindow.setFullScreen(!mainWindow.isFullScreen());
-        }
-      }, {
-        label: 'Toggle &Developer Tools',
-        accelerator: 'Alt+Ctrl+I',
-        click() {
-          mainWindow.toggleDevTools();
-        }
-      }] : [{
-        label: 'Toggle &Full Screen',
-        accelerator: 'F11',
-        click() {
-          mainWindow.setFullScreen(!mainWindow.isFullScreen());
-        }
-      }]
-    }, {
-      label: 'Help',
-      submenu: [{
-        label: 'Learn More',
-        click() {
-          shell.openExternal('http://electron.atom.io');
-        }
-      }, {
-        label: 'Documentation',
-        click() {
-          shell.openExternal('https://github.com/atom/electron/tree/master/docs#readme');
-        }
-      }, {
-        label: 'Community Discussions',
-        click() {
-          shell.openExternal('https://discuss.atom.io/c/electron');
-        }
-      }, {
-        label: 'Search Issues',
-        click() {
-          shell.openExternal('https://github.com/atom/electron/issues');
-        }
-      }]
-    }];
-    menu = Menu.buildFromTemplate(template);
-    mainWindow.setMenu(menu);
   }
+
+  function hideWindow() {
+    if (!tray.window) return;
+    tray.window.hide();
+  }
+
+  function initWindow() {
+    const defaults = {
+      width: 500,
+      height: 728,
+      show: false,
+      frame: false
+    };
+
+    tray.window = new BrowserWindow(defaults);
+    tray.window.loadURL(`file://${__dirname}/app/app.html`);
+    tray.window.on('blur', hideWindow);
+
+    initMenu();
+    checkUpdate(false);
+  }
+
+  function showWindow() {
+    tray.window.show();
+  }
+
+  initWindow();
+
+  tray.on('click', (e) => {
+    if (e.altKey || e.shiftKey || e.ctrlKey || e.metaKey) { return hideWindow(); }
+    if (tray.window && tray.window.isVisible()) { return hideWindow(); }
+    showWindow();
+  });
+
+  tray.window.on('closed', () => {
+    hideWindow();
+  });
+
+  autoStart.enable();
+
+  tray.setToolTip('Todo notifications');
 });

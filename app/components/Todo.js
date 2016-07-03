@@ -1,76 +1,93 @@
 import React, { Component, PropTypes } from 'react';
-import Checkbox from 'material-ui/Checkbox';
-import TextField from 'material-ui/TextField';
-import DeleteForever from 'material-ui/svg-icons/action/delete-forever';
-import { List, ListItem } from 'material-ui';
+import DatePicker from 'material-ui/DatePicker';
+import TimePicker from 'material-ui/TimePicker';
+import { Card, CardHeader, CardText } from 'material-ui/Card';
+import FlatButton from 'material-ui/FlatButton';
+
+import moment from 'moment';
+
+import TodoItem from './TodoItem';
+import TodoTextInput from './TodoTextInput';
 
 export default class Todo extends Component {
   static propTypes = {
-    addTodo: PropTypes.func.isRequired,
-    deleteTodo: PropTypes.func.isRequired,
-    toggleTodo: PropTypes.func.isRequired,
-    todos: PropTypes.array
+    actions: PropTypes.object.isRequired,
+    todos: PropTypes.array.isRequired
   };
 
-  state = {
-    open: false
+  constructor(props) {
+    super(props);
+    this.state = {
+      controlledDate: new Date(),
+      controlledTime: new Date(),
+    };
   }
 
-  handleOpen = () => {
-    this.setState({ open: true });
+  handleDateChange = (event, date) => {
+    this.setState({
+      controlledDate: date
+    });
   }
 
-  handleClose = () => {
-    this.setState({ open: false });
+  handleTimeChange = (event, time) => {
+    this.setState({
+      controlledTime: time
+    });
   }
 
-  handleCheck(itemId) {
-    const { toggleTodo } = this.props;
-    toggleTodo(itemId);
-  }
-
-  handleKeyDown = (event) => {
-    const value = event.target.value;
-    const { addTodo } = this.props;
-    if (event.keyCode === 13) {
-      addTodo(value);
+  handleSave(text) {
+    const td =
+      `${moment(this.state.controlledDate).format('YYYY/MM/DD')},
+      ${moment(this.state.controlledTime).format('hh:mm:ss a')}`;
+    if (text.length !== 0) {
+      this.props.actions.addTodo(text, td);
     }
-  }
-
-  handleDelete(itemId) {
-    const { deleteTodo } = this.props;
-    deleteTodo(itemId);
   }
 
   render() {
     const { todos } = this.props;
     return (
       <div>
-        <TextField
-          name="addTodo"
-          ref="addTodo"
-          floatingLabelText="Add a new todo"
-          onKeyDown={this.handleKeyDown}
-        />
-        <List>
-        {todos.map((item) => (
-          <ListItem
-            key={item.id}
-            primaryText={item.text}
-            onTouchTap={() => this.handleCheck(item.id)}
-            leftIcon={
-              <Checkbox
-                checked={item.completed}
-              />
-            }
-            rightIcon={
-              <DeleteForever
-                onClick={() => this.handleDelete(item.id)}
-              />
-            }
+        <Card>
+          <CardText>
+            <TodoTextInput
+              newTodo
+              onSave={this.handleSave.bind(this)}
+            />
+            <FlatButton
+              label="Add"
+              onTouchTap={this.handleSave.bind(this)}
+            />
+          </CardText>
+          <CardHeader
+            title="schedule"
+            actAsExpander
+            showExpandableButton
           />
-      ))}
-        </List>
+          <CardText expandable>
+            <DatePicker
+              hintText="Task date"
+              value={this.state.controlledDate}
+              onChange={this.handleDateChange}
+            />
+            <TimePicker
+              hintText="Task time"
+              value={this.state.controlledTime}
+              onChange={this.handleTimeChange}
+            />
+          </CardText>
+        </Card>
+        <ul>
+          {todos.map((todo) => (
+            <TodoItem
+              key={todo.id}
+              todo={todo}
+              editTodo={this.props.actions.editTodo}
+              deleteTodo={this.props.actions.deleteTodo}
+              toggleTodo={this.props.actions.toggleTodo}
+            />
+          ))}
+        </ul>
       </div>
     );
   }

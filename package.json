@@ -6,6 +6,7 @@
   "main": "main.js",
   "scripts": {
     "test": "cross-env NODE_ENV=test mocha --compilers js:babel-register --recursive --require ./test/setup.js",
+    "revision": "echo \"export default '`git rev-parse HEAD`';\" > app/utils/revision.js",
     "test-watch": "npm test -- --watch",
     "test-e2e": "cross-env NODE_ENV=test mocha --compilers js:babel-register --require ./test/setup.js --require co-mocha ./test/e2e.js",
     "lint": "eslint app test *.js",
@@ -116,10 +117,13 @@
     "webpack-hot-middleware": "^2.10.0"
   },
   "dependencies": {
+    "auto-launch": "^2.1.0",
     "css-modules-require-hook": "^4.0.0",
     "electron-debug": "^1.0.1",
+    "electron-gh-releases": "^2.0.4",
     "font-awesome": "^4.6.3",
     "material-ui": "^0.15.1",
+    "moment": "^2.13.0",
     "postcss": "^5.0.21",
     "react": "^15.1.0",
     "react-dom": "^15.1.0",

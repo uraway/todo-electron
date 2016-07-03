@@ -6,7 +6,7 @@ import TodoPage from './containers/TodoPage';
 
 export default (
   <Route path="/" component={App}>
-    <IndexRoute component={HomePage} />
-    <Route path="/todo" component={TodoPage} />
+    <IndexRoute component={TodoPage} />
+    <Route path="/home" component={HomePage} />
   </Route>
 );

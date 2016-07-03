@@ -1,63 +1,54 @@
-import { TODO_ADD, TODO_DELETE, TODO_TOGGLE } from '../actions/todo';
+import { TODO_ADD, TODO_DELETE, TODO_TOGGLE, TODO_EDIT } from '../actions/todo';
+import moment from 'moment';
 
 const initialState = [
   {
-    id: 0,
+    id: 123245,
     text: 'Learn Redux',
-    completed: false,
+    completed: true,
+    td: moment(new Date()).format('YYYY/MM/DD, hh:mm:ss a')
   },
   {
-    id: 1,
-    text: 'Add todos',
-    completed: true,
+    id: 99999,
+    text: '論文を書く',
+    completed: false,
+    td: moment(new Date()).format('YYYY/MM/DD, hh:mm:ss a')
   }
 ];
 
-const todo = (state, action) => {
+export default function todos(state = initialState, action) {
   switch (action.type) {
     case TODO_ADD:
       return [
         {
-          id: action.id,
+          id: state.reduce((maxId, todo) => Math.max(todo.id, maxId), -1) + 1,
           text: action.text,
           completed: false,
+          td: action.td
         },
-        ...state,
+        ...state
       ];
 
     case TODO_DELETE:
-      return state.filter((item) =>
-        item.id !== action.id
+      return state.filter((todo) =>
+        todo.id !== action.id
       );
 
     case TODO_TOGGLE:
-      if (state.id !== action.id) {
-        return state;
-      }
+      return state.map((todo) =>
+        todo.id === action.id ?
+          Object.assign({}, todo, { completed: !todo.completed }) :
+          todo
+      );
 
-      return Object.assign({}, state, {
-        completed: !state.completed,
-      });
+    case TODO_EDIT:
+      return state.map((todo) =>
+        todo.id === action.id ?
+          Object.assign({}, todo, { text: action.text }) :
+          todo
+      );
 
     default:
       return state;
   }
-};
-
-const todos = (state = initialState, action) => {
-  switch (action.type) {
-    case TODO_ADD:
-      return [
-        ...state,
-        todo(undefined, action)
-      ];
-    case TODO_TOGGLE:
-      return state.map((t) =>
-        todo(t, action)
-      );
-    default:
-      return state;
-  }
-};
-
-export default todos;
+}
