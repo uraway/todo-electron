@@ -24,7 +24,7 @@ const installExtensions = async () => {
     ];
     for (const name of extensions) {
       try {
-        await installer.default(installer[name]);
+        await installer.default(installer[name]); // eslint-disable-line babel/no-await-in-loop
       } catch (e) {} // eslint-disable-line
     }
   }
