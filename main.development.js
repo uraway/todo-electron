@@ -1,22 +1,33 @@
-import { app, BrowserWindow, Menu, shell } from 'electron';
+import { app, BrowserWindow, Menu, shell, Tray } from 'electron';
+import path from 'path';
 
 let menu;
 let template;
 let mainWindow = null;
+let tray = null;
 
+const iconIdle = path.join(__dirname, 'images', 'tray-idle.png');
 
-if (process.env.NODE_ENV === 'development') {
+// Utilities
+const isDevelopment = (process.env.NODE_ENV === 'development');
+const isDarwin = (process.platform === 'darwin');
+/*
+const isLinux = (process.platform === 'linux');
+const isWindows = (process.platform === 'win32');
+*/
+
+if (isDevelopment) {
   require('electron-debug')(); // eslint-disable-line global-require
 }
 
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  if (isDarwin) app.quit();
 });
 
 
 const installExtensions = async () => {
-  if (process.env.NODE_ENV === 'development') {
+  if (isDevelopment) {
     const installer = require('electron-devtools-installer'); // eslint-disable-line global-require
     const extensions = [
       'REACT_DEVELOPER_TOOLS',
@@ -39,32 +50,9 @@ app.on('ready', async () => {
     height: 728
   });
 
-  mainWindow.loadURL(`file://${__dirname}/app/app.html`);
+  tray = new Tray(iconIdle);
 
-  mainWindow.webContents.on('did-finish-load', () => {
-    mainWindow.show();
-    mainWindow.focus();
-  });
-
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
-
-  if (process.env.NODE_ENV === 'development') {
-    mainWindow.openDevTools();
-    mainWindow.webContents.on('context-menu', (e, props) => {
-      const { x, y } = props;
-
-      Menu.buildFromTemplate([{
-        label: 'Inspect element',
-        click() {
-          mainWindow.inspectElement(x, y);
-        }
-      }]).popup(mainWindow);
-    });
-  }
-
-  if (process.platform === 'darwin') {
+  function initMenu() {
     template = [{
       label: 'Electron',
       submenu: [{
@@ -128,7 +116,7 @@ app.on('ready', async () => {
       }]
     }, {
       label: 'View',
-      submenu: (process.env.NODE_ENV === 'development') ? [{
+      submenu: (isDevelopment) ? [{
         label: 'Reload',
         accelerator: 'Command+R',
         click() {
@@ -196,71 +184,35 @@ app.on('ready', async () => {
 
     menu = Menu.buildFromTemplate(template);
     Menu.setApplicationMenu(menu);
-  } else {
-    template = [{
-      label: '&File',
-      submenu: [{
-        label: '&Open',
-        accelerator: 'Ctrl+O'
-      }, {
-        label: '&Close',
-        accelerator: 'Ctrl+W',
-        click() {
-          mainWindow.close();
-        }
-      }]
-    }, {
-      label: '&View',
-      submenu: (process.env.NODE_ENV === 'development') ? [{
-        label: '&Reload',
-        accelerator: 'Ctrl+R',
-        click() {
-          mainWindow.webContents.reload();
-        }
-      }, {
-        label: 'Toggle &Full Screen',
-        accelerator: 'F11',
-        click() {
-          mainWindow.setFullScreen(!mainWindow.isFullScreen());
-        }
-      }, {
-        label: 'Toggle &Developer Tools',
-        accelerator: 'Alt+Ctrl+I',
-        click() {
-          mainWindow.toggleDevTools();
-        }
-      }] : [{
-        label: 'Toggle &Full Screen',
-        accelerator: 'F11',
-        click() {
-          mainWindow.setFullScreen(!mainWindow.isFullScreen());
-        }
-      }]
-    }, {
-      label: 'Help',
-      submenu: [{
-        label: 'Learn More',
-        click() {
-          shell.openExternal('http://electron.atom.io');
-        }
-      }, {
-        label: 'Documentation',
-        click() {
-          shell.openExternal('https://github.com/atom/electron/tree/master/docs#readme');
-        }
-      }, {
-        label: 'Community Discussions',
-        click() {
-          shell.openExternal('https://discuss.atom.io/c/electron');
-        }
-      }, {
-        label: 'Search Issues',
-        click() {
-          shell.openExternal('https://github.com/atom/electron/issues');
-        }
-      }]
-    }];
-    menu = Menu.buildFromTemplate(template);
-    mainWindow.setMenu(menu);
   }
+
+  function hideWindow() {
+    if (!tray.window) return;
+    tray.window.hide();
+  }
+
+  function initWindow() {
+    const defaults = {
+      width: 800,
+      height: 728,
+      show: false,
+    };
+
+    tray.window = new BrowserWindow(defaults);
+    tray.window.loadURL(`file://${__dirname}/app/app.html`);
+    tray.window.on('blur', hideWindow);
+
+    initMenu();
+  }
+
+  function showWindow() {
+    tray.window.show();
+  }
+
+  initWindow();
+
+  tray.on('click', () => {
+    showWindow();
+  });
+  tray.setToolTip('Todo notifications');
 });
