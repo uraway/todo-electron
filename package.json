@@ -117,8 +117,10 @@
     "webpack-hot-middleware": "^2.10.0"
   },
   "dependencies": {
+    "auto-launch": "^2.1.0",
     "css-modules-require-hook": "^4.0.0",
     "electron-debug": "^1.0.1",
+    "electron-gh-releases": "^2.0.4",
     "font-awesome": "^4.6.3",
     "material-ui": "^0.15.1",
     "moment": "^2.13.0",
