@@ -44,7 +44,7 @@ export default class TodoItem extends Component {
       body: todo.text
     });
     n.onclick = () => {
-      console.log(n);
+      // console.log(n);
     };
   }
 

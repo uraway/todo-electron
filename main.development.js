@@ -1,9 +1,10 @@
-import { app, BrowserWindow, Menu, shell, Tray } from 'electron';
+import { app, BrowserWindow, Menu, shell, Tray, dialog } from 'electron';
 import path from 'path';
+import AutoLaunch from 'auto-launch';
+import GhReleases from 'electron-gh-releases';
 
 let menu;
 let template;
-let mainWindow = null;
 let tray = null;
 
 const iconIdle = path.join(__dirname, 'images', 'tray-idle.png');
@@ -15,6 +16,11 @@ const isDarwin = (process.platform === 'darwin');
 const isLinux = (process.platform === 'linux');
 const isWindows = (process.platform === 'win32');
 */
+
+const autoStart = new AutoLaunch({
+  name: 'Todo',
+  path: process.execPath.match(/.*?\.app/)[0]
+});
 
 if (isDevelopment) {
   require('electron-debug')(); // eslint-disable-line global-require
@@ -44,13 +50,57 @@ const installExtensions = async () => {
 app.on('ready', async () => {
   await installExtensions();
 
-  mainWindow = new BrowserWindow({
-    show: false,
-    width: 1024,
-    height: 728
-  });
-
   tray = new Tray(iconIdle);
+
+  function comfirmUpdate(updater) {
+    dialog.showMessageBox({
+      type: 'question',
+      buttons: ['Update & Restart', 'Cancel'],
+      title: 'Update available',
+      cancelId: 99,
+      message: 'There is an update available. Would you like to update and restart now?'
+    }, (response) => {
+      console.log(`Exit: ${response}`);
+      app.dock.hide();
+      if (response === 0) {
+        updater.install();
+      }
+    });
+  }
+
+  function checkUpdate(showAlert) {
+    const updateOptions = {
+      repo: 'uraway/todo-electron',
+      currentVersion: app.getVersion()
+    };
+
+    const updater = new GhReleases(updateOptions);
+
+    updater.on('error', (event, message) => {
+      console.log(`Event: ${JSON.stringify(event)}. Message: ${message}`);
+    });
+
+    updater.on('update-downloaded', () => {
+      comfirmUpdate(updater);
+    });
+
+    updater.check((err, status) => {
+      if (err || !status) {
+        if (showAlert) {
+          dialog.showMessageBox({
+            type: 'info',
+            buttons: ['Close'],
+            title: 'No update available',
+            message: 'You are currently running the latest version.'
+          });
+        }
+        app.dock.hide();
+      }
+      if (!err && status) {
+        updater.download();
+      }
+    });
+  }
 
   function initMenu() {
     template = [{
@@ -76,14 +126,6 @@ app.on('ready', async () => {
       }, {
         label: 'Show All',
         selector: 'unhideAllApplications:'
-      }, {
-        type: 'separator'
-      }, {
-        label: 'Quit',
-        accelerator: 'Command+Q',
-        click() {
-          app.quit();
-        }
       }]
     }, {
       label: 'Edit',
@@ -120,25 +162,25 @@ app.on('ready', async () => {
         label: 'Reload',
         accelerator: 'Command+R',
         click() {
-          mainWindow.webContents.reload();
+          tray.window.webContents.reload();
         }
       }, {
         label: 'Toggle Full Screen',
         accelerator: 'Ctrl+Command+F',
         click() {
-          mainWindow.setFullScreen(!mainWindow.isFullScreen());
+          tray.window.setFullScreen(!tray.window.isFullScreen());
         }
       }, {
         label: 'Toggle Developer Tools',
         accelerator: 'Alt+Command+I',
         click() {
-          mainWindow.toggleDevTools();
+          tray.window.toggleDevTools();
         }
       }] : [{
         label: 'Toggle Full Screen',
         accelerator: 'Ctrl+Command+F',
         click() {
-          mainWindow.setFullScreen(!mainWindow.isFullScreen());
+          tray.window.setFullScreen(!tray.isFullScreen());
         }
       }]
     }, {
@@ -193,9 +235,10 @@ app.on('ready', async () => {
 
   function initWindow() {
     const defaults = {
-      width: 800,
+      width: 500,
       height: 728,
       show: false,
+      frame: false
     };
 
     tray.window = new BrowserWindow(defaults);
@@ -203,6 +246,7 @@ app.on('ready', async () => {
     tray.window.on('blur', hideWindow);
 
     initMenu();
+    checkUpdate(false);
   }
 
   function showWindow() {
@@ -211,8 +255,17 @@ app.on('ready', async () => {
 
   initWindow();
 
-  tray.on('click', () => {
+  tray.on('click', (e) => {
+    if (e.altKey || e.shiftKey || e.ctrlKey || e.metaKey) { return hideWindow(); }
+    if (tray.window && tray.window.isVisible()) { return hideWindow(); }
     showWindow();
   });
+
+  tray.window.on('closed', () => {
+    hideWindow();
+  });
+
+  autoStart.enable();
+
   tray.setToolTip('Todo notifications');
 });
