@@ -1,15 +1,18 @@
 import { TODO_ADD, TODO_DELETE, TODO_TOGGLE, TODO_EDIT } from '../actions/todo';
+import moment from 'moment';
 
 const initialState = [
   {
     id: 123245,
     text: 'Learn Redux',
-    completed: false,
+    completed: true,
+    td: moment(new Date()).format('YYYY/MM/DD, hh:mm:ss a')
   },
   {
     id: 99999,
-    text: 'Add todos',
-    completed: true,
+    text: '論文を書く',
+    completed: false,
+    td: moment(new Date()).format('YYYY/MM/DD, hh:mm:ss a')
   }
 ];
 
@@ -21,6 +24,7 @@ export default function todos(state = initialState, action) {
           id: state.reduce((maxId, todo) => Math.max(todo.id, maxId), -1) + 1,
           text: action.text,
           completed: false,
+          td: action.td
         },
         ...state
       ];

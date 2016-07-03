@@ -3,10 +3,11 @@ export const TODO_DELETE = 'TODO_DELETE';
 export const TODO_TOGGLE = 'TODO_TOGGLE';
 export const TODO_EDIT = 'TODO_EDIT';
 
-export function addTodo(text) {
+export function addTodo(text, td) {
   return {
     type: TODO_ADD,
-    text
+    text,
+    td,
   };
 }
 
