@@ -1,7 +1,24 @@
+import React, { Component, PropTypes } from 'react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import Todo from '../components/Todo';
 import * as TodoActions from '../actions/todo';
+
+class TodoContainer extends Component {
+  static propTypes = {
+    todos: PropTypes.array.isRequired,
+    actions: PropTypes.object.isRequired
+  };
+  render() {
+    const { todos, actions } = this.props;
+    return (
+      <Todo
+        actions={actions}
+        todos={todos}
+      />
+    );
+  }
+}
 
 function mapStateToProps(state) {
   return {
@@ -10,7 +27,9 @@ function mapStateToProps(state) {
 }
 
 function mapDispatchToProps(dispatch) {
-  return bindActionCreators(TodoActions, dispatch);
+  return {
+    actions: bindActionCreators(TodoActions, dispatch)
+  };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Todo);
+export default connect(mapStateToProps, mapDispatchToProps)(TodoContainer);
