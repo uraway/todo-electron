@@ -31,9 +31,11 @@ node_modules
 
 # App packaged
 dist
-release
 main.js
 main.js.map
 
 # revision
 app/utils/revision.js
+
+# direnv
+.direnv
