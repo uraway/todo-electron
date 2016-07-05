@@ -38,4 +38,4 @@ main.js.map
 app/utils/revision.js
 
 # direnv
-.direnv
+.envrc
