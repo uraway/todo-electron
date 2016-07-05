@@ -1,7 +1,7 @@
 {
   "name": "todo-electron",
   "productName": "TodoElectron",
-  "version": "0.0.2",
+  "version": "0.0.1",
   "description": "Electron application boilerplate based on React, React Router, Webpack, React Hot Loader for rapid application development",
   "main": "main.js",
   "scripts": {
@@ -20,10 +20,7 @@
     "package-all": "npm run package -- --all",
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
     "dev": "concurrently --kill-others \"npm run hot-server\" \"npm run start-hot\"",
-    "zip-all": "npm run zip-osx && npm run zip-win32 && npm run zip-win64",
-    "zip-osx": "zip -r TodoElectron-darwin-x64.zip ./release/darwin-x64/TodoElectron-darwin-x64",
-    "zip-win32": "zip -r TodoElectron-win32-ia32.zip ./release/win32-ia32/TodoElectron-win32-ia32",
-    "zip-win64": "zip -r TodoElectron-win32-x64.zip ./release/win32-x64/TodoElectron-win32-x64"
+    "release": "node -r babel-register release.js"
   },
   "bin": {
     "electron": "./node_modules/.bin/electron",
