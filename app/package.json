@@ -1,20 +1,30 @@
 {
-  "name": "todo-electron",
-  "version": "0.0.2",
-  "description": "Electron application boilerplate based on React, React Router, Webpack, React Hot Loader for rapid application development",
-  "author": {
-    "name": "Masato Urai",
-    "url": "https://github.com/uraway"
-  },
+  "name": "TodoElectron",
+  "description": "Simple TODO application built with Electron and Redux",
+  "version": "0.0.1",
+  "author": "Masato Urai <masato.u0107@gmail.com>",
+  "main": "main.js",
+  "homepage": "https://github/uraway/todo-electron",
   "license": "MIT",
-  "keywords": [
-    "electron",
-    "boilerplate",
-    "react",
-    "react-router",
-    "flux",
-    "webpack",
-    "react-hot"
-  ],
-  "homepage": "https://github.com/uraway/todo-electron#readme"
+  "dependencies": {
+    "auto-launch": "^2.1.0",
+    "css-modules-require-hook": "^4.0.0",
+    "electron-builder": "^5.10.5",
+    "electron-debug": "^1.0.1",
+    "electron-gh-releases": "^2.0.4",
+    "font-awesome": "^4.6.3",
+    "material-ui": "^0.15.1",
+    "moment": "^2.13.0",
+    "postcss": "^5.0.21",
+    "react": "^15.1.0",
+    "react-dom": "^15.1.0",
+    "react-redux": "^4.4.5",
+    "react-router": "^2.4.1",
+    "react-router-redux": "^4.0.4",
+    "react-tap-event-plugin": "^1.0.0",
+    "redux": "^3.5.2",
+    "redux-localstorage": "^0.4.1",
+    "redux-thunk": "^2.1.0",
+    "source-map-support": "^0.4.0"
+  }
 }
