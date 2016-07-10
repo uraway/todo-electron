@@ -7,12 +7,12 @@ const config = {
 
   devtool: 'source-map',
 
-  entry: './app/index',
+  entry: './src/app/index',
 
   output: {
     ...baseConfig.output,
 
-    publicPath: '../dist/'
+    publicPath: './app'
   },
 
   module: {
@@ -44,12 +44,6 @@ const config = {
     new webpack.optimize.OccurrenceOrderPlugin(),
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify('production')
-    }),
-    new webpack.optimize.UglifyJsPlugin({
-      compressor: {
-        screw_ie8: true,
-        warnings: false
-      }
     }),
     new ExtractTextPlugin('style.css', { allChunks: true })
   ],

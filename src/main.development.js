@@ -1,3 +1,4 @@
+/* eslint no-console: 0 */
 import { app, BrowserWindow, Menu, shell, Tray, dialog } from 'electron';
 import path from 'path';
 import AutoLaunch from 'auto-launch';
@@ -7,7 +8,7 @@ let menu;
 let template;
 let tray = null;
 
-const iconIdle = path.join(__dirname, 'images', 'tray-idle.png');
+const iconIdle = path.join(__dirname, 'assets', 'tray-idle.png');
 
 // Utilities
 const isDevelopment = (process.env.NODE_ENV === 'development');
@@ -18,7 +19,7 @@ const isWindows = (process.platform === 'win32');
 */
 
 const autoStart = new AutoLaunch({
-  name: 'Todo',
+  name: 'TodoElectron',
   path: process.execPath.match(/.*?\.app/)[0]
 });
 
@@ -242,7 +243,10 @@ app.on('ready', async () => {
     };
 
     tray.window = new BrowserWindow(defaults);
-    tray.window.loadURL(`file://${__dirname}/app/app.html`);
+    tray.window.loadURL(`file://${__dirname}/index.html`);
+    if (isDevelopment) {
+      tray.window.toggleDevTools();
+    }
     tray.window.on('blur', hideWindow);
 
     initMenu();
