@@ -6,20 +6,15 @@ export default {
 
   devtool: 'source-map',
 
-  entry: ['babel-polyfill', './main.development'],
+  entry: ['babel-polyfill', './src/main.development'],
 
   output: {
     ...baseConfig.output,
-    path: __dirname,
-    filename: './main.js'
+    publicPath: './app',
+    filename: 'main.js'
   },
 
   plugins: [
-    new webpack.optimize.UglifyJsPlugin({
-      compressor: {
-        warnings: false
-      }
-    }),
     new webpack.BannerPlugin(
       'require("source-map-support").install();',
       { raw: true, entryOnly: false }
