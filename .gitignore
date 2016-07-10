@@ -29,13 +29,11 @@ node_modules
 # OSX
 .DS_Store
 
-# App packaged
-dist
-main.js
-main.js.map
-
-# revision
-app/utils/revision.js
+# Compiled sources
+/app/
 
 # direnv
 .envrc
+
+# releases
+dist
